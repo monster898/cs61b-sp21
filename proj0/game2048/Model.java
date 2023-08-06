@@ -5,7 +5,7 @@ import java.util.Observable;
 
 
 /** The state of a game of 2048.
- *  @author TODO: YOUR NAME HERE
+ *  @author Hao Chen
  */
 public class Model extends Observable {
     /** Current contents of the board. */
@@ -107,12 +107,34 @@ public class Model extends Observable {
      *    and the trailing tile does not.
      * */
     public boolean tilt(Side side) {
-        boolean changed;
-        changed = false;
+        boolean changed = false;
 
-        // TODO: Modify this.board (and perhaps this.score) to account
-        // for the tilt to the Side SIDE. If the board changed, set the
-        // changed local variable to true.
+        int size = board.size();
+        board.setViewingPerspective(side);
+        for (int column = 0; column < size; column++) {
+            boolean[] mergedPositionFlags = new boolean[size];
+            int toPlaceIndex = size - 1;
+            for (int row = size - 1; row >= 0; row--) {
+                Tile tile = board.tile(column, row);
+                if (tile == null) continue;
+                // 放到前面
+                board.move(column, toPlaceIndex, tile);
+                if (toPlaceIndex != row) {
+                    changed = true;
+                }
+                // 处理合并
+                int topTileIndex = toPlaceIndex + 1;
+                if (topTileIndex < size && !mergedPositionFlags[topTileIndex] && board.tile(column, topTileIndex).value() == tile.value()) {
+                    changed = true;
+                    board.move(column, topTileIndex, tile.next());
+                    mergedPositionFlags[topTileIndex] = true;
+                    score += board.tile(column, topTileIndex).value();
+                    continue;
+                }
+                toPlaceIndex = toPlaceIndex - 1;
+            }
+        }
+        board.setViewingPerspective(Side.NORTH);
 
         checkGameOver();
         if (changed) {
@@ -137,7 +159,12 @@ public class Model extends Observable {
      *  Empty spaces are stored as null.
      * */
     public static boolean emptySpaceExists(Board b) {
-        // TODO: Fill in this function.
+        Iterable<Tile> iterator = (Iterable<Tile>) b.iterator();
+        for (Tile t : iterator) {
+            if (t == null) {
+                return true;
+            }
+        }
         return false;
     }
 
@@ -147,7 +174,12 @@ public class Model extends Observable {
      * given a Tile object t, we get its value with t.value().
      */
     public static boolean maxTileExists(Board b) {
-        // TODO: Fill in this function.
+        Iterable<Tile> iterator = (Iterable<Tile>) b.iterator();
+        for (Tile t : iterator) {
+            if (t != null && t.value() == MAX_PIECE) {
+                return true;
+            }
+        }
         return false;
     }
 
@@ -158,8 +190,27 @@ public class Model extends Observable {
      * 2. There are two adjacent tiles with the same value.
      */
     public static boolean atLeastOneMoveExists(Board b) {
-        // TODO: Fill in this function.
-        return false;
+        return emptySpaceExists(b) || hasAdjacentTileWithSameValue(b);
+    }
+    private static boolean hasAdjacentTileWithSameValue(Board b) {
+        boolean ret = false;
+        int boardLenth = b.size();
+        for (int c = 0; c < boardLenth; c++) {
+            for (int r = 0; r < boardLenth; r++) {
+                Tile tile = b.tile(c, r);
+                if (tile == null) continue;
+                int top = r - 1 >= 0 ? b.tile(c, r - 1).value() : 0;
+                int bottom = r + 1 < boardLenth ? b.tile(c, r + 1).value() : 0;
+                int left = c - 1 >= 0 ? b.tile(c - 1, r).value() : 0;
+                int right = c + 1 < boardLenth ? b.tile(c + 1, r).value() : 0;
+                int value = tile.value();
+                if (value == left || value == right || value == top || value == bottom){
+                    ret = true;
+                }
+            }
+        }
+
+        return ret;
     }
 
 
