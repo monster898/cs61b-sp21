@@ -37,13 +37,13 @@ public class TimeSLList {
             if (checkPoints.contains(i)) {
                 // perform test
                 Stopwatch sw = new Stopwatch();
-                for (int j = 0; j < 1000; j++) {
+                for (int j = 0; j < 10000; j++) {
                     listForTest.getLast();
                 }
                 Double timeNowInSeconds = sw.elapsedTime();
                 Ns.addLast(i);
                 times.addLast(timeNowInSeconds);
-                opCounts.addLast(1000);
+                opCounts.addLast(10000);
             }
         }
         printTimingTable(Ns, times, opCounts);
