@@ -35,6 +35,9 @@ public class ArrayDeque<T> {
     }
 
     public T removeFirst() {
+        if (size == 0) {
+            return null;
+        }
         if ((double) arr.length / size < SHRINK_RADIO) {
             resize(arr.length / 2);
         }
@@ -46,6 +49,9 @@ public class ArrayDeque<T> {
     }
 
     public T removeLast() {
+        if (size == 0) {
+            return null;
+        }
         if ((double) arr.length / size < SHRINK_RADIO) {
             resize(arr.length / 2);
         }
