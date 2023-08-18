@@ -124,4 +124,39 @@ public class LinkedListDequeTest {
         }
 
     }
+
+    @Test
+    public void equalsTest() {
+        LinkedListDeque<Integer> deque1 = new LinkedListDeque<>();
+        LinkedListDeque<Integer> deque2 = new LinkedListDeque<>();
+        ArrayDeque<Integer> arrayDeque = new ArrayDeque<>();
+        for (int i = 0; i < 100; i++) {
+            deque1.addLast(i);
+            deque2.addLast(i);
+            arrayDeque.addLast(i);
+        }
+        assertTrue(deque1.equals(deque2));
+        assertTrue(deque1.equals(deque2));
+        assertTrue(deque1.equals(arrayDeque));
+
+        deque2.removeLast();
+        assertFalse(deque1.equals(deque2));
+
+        deque2.addLast((int) (Math.random() * 10));
+        assertFalse(deque1.equals(deque2));
+    }
+
+    @Test
+    public void iteratorTest() {
+        LinkedListDeque<Integer> deque = new LinkedListDeque<>();
+        for (int i = 0; i < 10; i++) {
+            deque.addLast(i);
+        }
+
+        int expected = 0;
+        for (int current : deque) {
+            assertEquals(current, expected);
+            expected += 1;
+        }
+    }
 }

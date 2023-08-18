@@ -2,7 +2,7 @@ package deque;
 
 import java.util.Iterator;
 
-public class ArrayDeque<T> implements Deque<T> {
+public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     private  T[] arr;
     private int front;
     private int end;
@@ -35,10 +35,11 @@ public class ArrayDeque<T> implements Deque<T> {
     }
 
     public T removeFirst() {
-        if (size == 0) {
+        if (isEmpty()) {
             return null;
         }
-        if ((double) arr.length / size < SHRINK_RADIO) {
+
+        if ((double) size / arr.length < SHRINK_RADIO) {
             resize(arr.length / 2);
         }
         front = plusOne(front);
@@ -49,12 +50,14 @@ public class ArrayDeque<T> implements Deque<T> {
     }
 
     public T removeLast() {
-        if (size == 0) {
+        if (isEmpty()) {
             return null;
         }
-        if ((double) arr.length / size < SHRINK_RADIO) {
+
+        if ((double) size / arr.length < SHRINK_RADIO) {
             resize(arr.length / 2);
         }
+
         end = minusOne(end);
         T result = arr[end];
         arr[end] = null;
@@ -103,7 +106,7 @@ public class ArrayDeque<T> implements Deque<T> {
 
     private class MyIterator implements Iterator<T> {
         private int index;
-        public MyIterator() {
+        MyIterator() {
             index = front;
         }
         @Override
@@ -126,18 +129,18 @@ public class ArrayDeque<T> implements Deque<T> {
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof ArrayDeque)) {
+        if (!(obj instanceof Deque)) {
             return false;
         }
 
-        ArrayDeque<?> objAsArrayDeque = (ArrayDeque<?>) obj;
+        Deque<?> objAsDeque = (Deque<?>) obj;
 
-        if (objAsArrayDeque.size() != size) {
+        if (objAsDeque.size() != size) {
             return false;
         }
 
         for (int i = 0; i < size; i++) {
-            if (objAsArrayDeque.get(i) != get(i)) {
+            if (!get(i).equals(objAsDeque.get(i))) {
                 return false;
             }
         }

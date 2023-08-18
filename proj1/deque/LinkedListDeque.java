@@ -2,13 +2,13 @@ package deque;
 
 import java.util.Iterator;
 
-public class LinkedListDeque<T> implements Deque<T> {
+public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
 
     private static class Node<T> {
-        public T value;
-        public Node<T> prev;
-        public Node<T> next;
-        public Node(T value) {
+        private final T value;
+        private Node<T> prev;
+        private Node<T> next;
+        Node(T value) {
             this.value = value;
         }
 
@@ -107,14 +107,16 @@ public class LinkedListDeque<T> implements Deque<T> {
         return getHelper(current + 1, index, p.next);
     }
     public T getRecursive(int index) {
-        if (index >= size || index < 0) return null;
+        if (index >= size || index < 0) {
+            return null;
+        }
         return getHelper(0, index, sentinel.next);
     }
 
     private class MyIterator implements Iterator<T> {
         int visitedCount;
         Node<T> current;
-        public MyIterator() {
+        MyIterator() {
             current = sentinel;
             visitedCount = 0;
         }
@@ -127,7 +129,9 @@ public class LinkedListDeque<T> implements Deque<T> {
         public T next() {
             if (hasNext()) {
                 visitedCount += 1;
-                return current.next.value;
+                T result =  current.next.value;
+                current = current.next;
+                return result;
             }
             return null;
         }
@@ -136,24 +140,20 @@ public class LinkedListDeque<T> implements Deque<T> {
         return new MyIterator();
     }
 
-    public int getSize() {
-        return size;
-    }
-
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof LinkedListDeque)) {
+        if (!(o instanceof Deque)) {
             return false;
         }
 
-        LinkedListDeque<?> oAsLinkedListDeque = (LinkedListDeque<?>) o;
+        Deque<?> oAsDeque = (Deque<?>) o;
 
-        if (oAsLinkedListDeque.size() != size) {
+        if (oAsDeque.size() != size) {
             return false;
         }
 
         for (int i = 0; i < size; i++) {
-            if (get(i) != oAsLinkedListDeque.get(i)) {
+            if (!get(i).equals(oAsDeque.get(i))) {
                 return false;
             }
         }
