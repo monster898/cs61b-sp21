@@ -2,7 +2,7 @@ package deque;
 
 import java.util.Iterator;
 
-public class ArrayDeque<T> {
+public class ArrayDeque<T> implements Deque<T> {
     private  T[] arr;
     private int front;
     private int end;
@@ -65,7 +65,7 @@ public class ArrayDeque<T> {
     private void resize(int capacity) {
         T[] newArray = (T[]) new Object[capacity];
         int index = 0;
-        while (plusOne(front) != end) {
+        for (int i = 0; i < size; i++) {
             front = plusOne(front);
             T current = arr[front];
             newArray[index] = current;
@@ -80,10 +80,6 @@ public class ArrayDeque<T> {
 
     public int size() {
         return size;
-    }
-
-    public boolean isEmpty() {
-        return size == 0;
     }
 
     public void printDeque() {

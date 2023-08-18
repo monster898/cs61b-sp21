@@ -30,11 +30,13 @@ public class ArrayDequeTest {
                 ADeque.addFirst(randVal);
                 LLDeque.addFirst(randVal);
             } else if (operationNumber == 3) {
-                ADeque.removeFirst();
-                LLDeque.removeFirst();
+                Integer value1 = ADeque.removeFirst();
+                Integer value2 = LLDeque.removeFirst();
+                assertEquals(value1, value2);
             } else if (operationNumber == 4) {
-                ADeque.removeLast();
-                LLDeque.removeLast();
+                Integer value1 = ADeque.removeLast();
+                Integer value2 = LLDeque.removeLast();
+                assertEquals(value1, value2);
             }
         }
     }
