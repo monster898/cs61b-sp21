@@ -9,7 +9,7 @@ import static gitlet.Utils.*;
  *  TODO: It's a good idea to give a description here of what else this Class
  *  does at a high level.
  *
- *  @author TODO
+ *  @author Hao Chen
  */
 public class Repository {
     /**
@@ -26,4 +26,7 @@ public class Repository {
     public static final File GITLET_DIR = join(CWD, ".gitlet");
 
     /* TODO: fill in the rest of this class. */
+    public static void init() {
+
+    }
 }
