@@ -1,17 +1,17 @@
 package gitlet;
 
+import java.io.Serializable;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.TreeMap;
 
 /** Represents a gitlet commit object.
- *  TODO: It's a good idea to give a description here of what else this Class
- *  does at a high level.
  *
  *  @author Hao Chen
  */
-public class Commit {
+public class Commit implements Serializable {
     /** The timestamp of this commit was made */
     private String timestamp = getCurrentTimestamp();
 
@@ -26,7 +26,9 @@ public class Commit {
     /** Another parent commit of this commit, because merge commit have two parents */
     private final String parent2;
 
-    /* TODO: fill in the rest of this class. */
+    /** The file included in this commit */
+    private TreeMap<String, String> fileNameToHashMap;
+
     public Commit(String message, String parent) {
         this.message = message;
         parent1 = parent;
@@ -47,6 +49,13 @@ public class Commit {
     private String getCurrentTimestamp() {
         LocalDateTime dateTime = LocalDateTime.now(ZoneOffset.ofHours(8)); // Assuming +0800 as the time zone offset
         return dateTime.format(formatter);
+    }
+
+    public TreeMap<String, String> getFileNameToHashMap() {
+        return fileNameToHashMap;
+    }
+    public void setFileNameToHashMap(TreeMap<String, String> map) {
+        fileNameToHashMap = map;
     }
 
     @Override

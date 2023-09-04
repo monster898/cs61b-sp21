@@ -12,7 +12,6 @@ public class Main {
      *  <COMMAND> <OPERAND1> <OPERAND2> ... 
      */
     public static void main(String[] args) {
-        // TODO: what if args is empty?
         checkArgs(args);
         String firstArg = args[0];
         switch(firstArg) {
@@ -20,7 +19,7 @@ public class Main {
                 Repository.init();
                 break;
             case "add":
-                // TODO: handle the `add [filename]` command
+                Repository.add(args[1]);
                 break;
                 // TODO: FILL THE REST IN
         }
@@ -37,6 +36,11 @@ public class Main {
         String command = args[0];
         if (!Arrays.asList(allCommands).contains(command)) {
             System.out.println("No command with that name exists.");
+            System.exit(0);
+        }
+
+        if (command.equals("init") && Repository.GITLET_DIR.exists()) {
+            System.out.println("A Gitlet version-control system already exists in the current directory.");
             System.exit(0);
         }
 

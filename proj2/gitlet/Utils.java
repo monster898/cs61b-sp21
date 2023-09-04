@@ -236,4 +236,28 @@ class Utils {
         System.out.printf(msg, args);
         System.out.println();
     }
+
+    static File getFileByHash(String hash) {
+        return join(Repository.OBJECTS_DIR, hash.substring(0, 2), hash.substring(2));
+    }
+
+    /** Compute hash value of object as file name and write to file system.
+     *  For example:
+     *  object's hash value is 0a214sd3g4asd23asd4
+     *  object is stored in .gitlet/objects/0a/214sd3g4asd23asd4
+     * */
+    static void writeObjectWithHashName(Serializable object, String hash) {
+        File file = getFileByHash(hash);
+        file.getParentFile().mkdirs();
+        writeObject(file, object);
+    }
+
+    static <T extends Serializable> T readObjectByHash(String hash, Class<T> expectedClass) {
+        return readObject(getFileByHash(hash), expectedClass);
+    }
+
+    static void deleteFileByHash(String hash) {
+        File file = getFileByHash(hash);
+        restrictedDelete(file);
+    }
 }
