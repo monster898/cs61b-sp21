@@ -1,6 +1,5 @@
 package gitlet;
 
-import java.lang.reflect.Array;
 import java.util.Arrays;
 
 /** Driver class for Gitlet, a subset of the Git version-control system.
@@ -49,20 +48,20 @@ public class Main {
             System.exit(0);
         }
 
-        switch (command) {
-            case "init":
-                if (args.length != 1) {
+//        switch (command) {
+//            case "init":
+//                if (args.length != 1) {
+//
+//                }
+//                break;
+//            case "add":
+//
+//
+//        }
 
-                }
-                break;
-            case "add":
-
-
-        }
-
-        if (notValid) {
-            System.out.println("Incorrect operands.");
-            System.exit(0);
-        }
+//        if (notValid) {
+//            System.out.println("Incorrect operands.");
+//            System.exit(0);
+//        }
     }
 }
