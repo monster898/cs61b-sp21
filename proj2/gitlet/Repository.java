@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.Serializable;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.TreeMap;
+import java.util.*;
 
 import static gitlet.Utils.*;
 
@@ -33,13 +33,13 @@ public class Repository {
 
     public static void init() {
         BRANCHES_DIR.mkdirs();
-
         Commit initialCommit = Commit.createInitialCommit();
-
         String hash = computeObjHash(initialCommit);
+        StagingArea stagingArea = new StagingArea();
+        writeObject(INDEX, stagingArea);
         writeContents(HEAD, "ref: refs/heads/master");
         writeContents(MASTER, hash);
-        writeObjectWithHashName(initialCommit, hash);
+        writeObjectWithHashAsFilename(initialCommit, hash);
     }
 
     public static void add(String fileName) {
@@ -49,33 +49,37 @@ public class Repository {
            System.exit(0);
         }
 
-        TreeMap<String, String> filesForAdditionMap;
         StagingArea stagingArea = readObject(INDEX, StagingArea.class);
-        if (!INDEX.exists()) {
-            filesForAdditionMap = new TreeMap<>();
-            stagingArea.filesForAdditionMap = filesForAdditionMap;
-        }
-        filesForAdditionMap = stagingArea.filesForAdditionMap;
+        TreeMap<String, String> stagingForAdditionMap = stagingArea.filesForAdditionMap;
 
         String content = readContentsAsString(targetFile);
         String hash = computeObjHash(content);
 
+        // If the current working version of the file is identical to the version in the current commit
+        // not stage it and unstage if it is already there.
         Commit headCommit = getHeadCommit();
         TreeMap<String, String> trackedFilesMap = headCommit.getTrackedFilesMap();
         if (trackedFilesMap.containsKey(fileName) && trackedFilesMap.get(fileName).equals(hash)) {
-            filesForAdditionMap.remove(fileName);
+            stagingForAdditionMap.remove(fileName);
             deleteFileByHash(hash);
             return;
         }
-        filesForAdditionMap.put(fileName, hash);
-        writeObjectWithHashName(content, hash);
+
+        // Delete previous version of the file in INDEX
+        if (stagingForAdditionMap.containsKey(fileName)) {
+            String previousHash = stagingForAdditionMap.get(fileName);
+            deleteFileByHash(previousHash);
+        }
+
+        stagingForAdditionMap.put(fileName, hash);
+        writeObjectWithHashAsFilename(content, hash);
         writeObject(INDEX, stagingArea);
     }
 
     private static Commit getHeadCommit() {
         File file = getCurrentBranchFile();
         String hash = readContentsAsString(file);
-        return readObject(getFileByHash(hash), Commit.class);
+        return getObjectByHash(hash, Commit.class);
     }
 
     private static File getCurrentBranchFile() {
@@ -109,20 +113,19 @@ public class Repository {
             trackedFilesMap.remove(fileName);
         }
         for (String fileName: stagingForAdditionMap.keySet()) {
-            trackedFilesMap.put(fileName, stagingArea.filesForAdditionMap.get(fileName));
+            trackedFilesMap.put(fileName, stagingForAdditionMap.get(fileName));
         }
 
         Commit newCommit = new Commit(message, headCommitHash, null);
         newCommit.setTrackedFilesMap(trackedFilesMap);
         String newCommitHash = computeObjHash(newCommit);
-        writeObjectWithHashName(newCommit, newCommitHash);
+        writeObjectWithHashAsFilename(newCommit, newCommitHash);
         writeContents(getCurrentBranchFile(), newCommitHash);
         stagingArea.clear();
         writeObject(INDEX, stagingArea);
     }
 
     public static void rm(String fileName) {
-        // Unstage the file if it is currently staged for addition.
         StagingArea stagingArea = readObject(INDEX, StagingArea.class);
         TreeMap<String, String> trackedFilesMap = getHeadCommit().getTrackedFilesMap();
         TreeMap<String, String> stagingForAdditionMap = stagingArea.filesForAdditionMap;
@@ -131,6 +134,7 @@ public class Repository {
             System.out.println("No reason to remove the file.");
             return;
         }
+        // Unstage the file if it is currently staged for addition.
         if (stagingForAdditionMap.containsKey(fileName)) {
             stagingForAdditionMap.remove(fileName);
             deleteFileByHash(stagingForAdditionMap.get(fileName));
@@ -145,39 +149,105 @@ public class Repository {
 
     public static void log() {
         Commit currentCommit = getHeadCommit();
-        String hash = computeObjHash(currentCommit);
         while (currentCommit != null) {
-            System.out.println("===");
-            System.out.println("commit " + hash);
+            printCommit(currentCommit);
             String firstParentHash = currentCommit.getFirstParentHash();
-            String secondParentHash = currentCommit.getSecondParentHash();
-            if (firstParentHash != null && secondParentHash != null) {
-                // this commit is a merged commit
-                System.out.println("Merge: " + hash + " " + currentCommit.getSecondParentHash());
-            }
-            System.out.println(currentCommit.toString(formatter));
-            System.out.print("\n");
             if (firstParentHash == null) {
                 break;
             }
-            hash = firstParentHash;
-            currentCommit = readObject(getFileByHash(firstParentHash), Commit.class);
+            currentCommit = getObjectByHash(firstParentHash, Commit.class);
         }
     }
 
-    public static void globalLog() {
-
+    private static void printCommit(Commit commit) {
+        String hash = computeObjHash(commit);
+        System.out.println("===");
+        System.out.println("commit " + hash);
+        String firstParentHash = commit.getFirstParentHash();
+        String secondParentHash = commit.getSecondParentHash();
+        if (firstParentHash != null && secondParentHash != null) {
+            // this commit is a merged commit
+            System.out.println("Merge: " + firstParentHash + " " + secondParentHash);
+        }
+        System.out.println(commit.toString(formatter));
+        System.out.print("\n");
     }
 
-    public static void find() {
+    private static HashSet<Commit> getAllCommits() {
+        HashSet<Commit> allCommits = new HashSet<>();
+        List<String> branchHeadsFilename = plainFilenamesIn(BRANCHES_DIR);
+        for (String headFilename: branchHeadsFilename) {
+            String hash = readContentsAsString(join(BRANCHES_DIR, headFilename));
+            Commit commit = readObject(getFileByHash(hash), Commit.class);
+            ArrayDeque<Commit> queue = new ArrayDeque<>();
+            queue.add(commit);
+            while (!queue.isEmpty()) {
+                Commit currentCommit = queue.pop();
+                allCommits.add(currentCommit);
+                String firstParentHash = currentCommit.getFirstParentHash();
+                String secondParentHash = currentCommit.getSecondParentHash();
+                if (firstParentHash != null) {
+                    Commit firstParent = getObjectByHash(firstParentHash, Commit.class);
+                    queue.add(firstParent);
+                }
 
+                if (secondParentHash != null) {
+                    Commit secondParent = getObjectByHash(secondParentHash, Commit.class);
+                    queue.add(secondParent);
+                }
+            }
+        }
+        return allCommits;
+    }
+
+    public static void globalLog() {
+        for (Commit commit: getAllCommits()) {
+            printCommit(commit);
+        }
+    }
+
+    public static void find(String commitMessage) {
+        boolean found = false;
+        for (Commit commit: getAllCommits()) {
+            if (commitMessage.equals(commit.getMessage())) {
+                found = true;
+                System.out.println(computeObjHash(commit));
+            }
+        }
+        if (!found) {
+            System.out.println("Found no commit with that message.");
+        }
     }
 
     public static void status() {
 
     }
 
-    public static void checkout() {
+    public static void checkoutFileOnHeadCommit(String fileName) {
+        Commit headCommit = getHeadCommit();
+        String headCommitHash = computeObjHash(headCommit);
+        checkoutFileOnSpecificCommit(headCommitHash, fileName);
+    }
+
+    public static void checkoutFileOnSpecificCommit(String commitHash,String fileName) {
+        File commitFile = getFileByHash(commitHash);
+        if (!commitFile.exists()) {
+            System.out.println("No commit with that id exists.");
+            return;
+        }
+
+        Commit commit = getObjectByHash(commitHash, Commit.class);
+        TreeMap<String, String> trackedFilesMap = commit.getTrackedFilesMap();
+        if (!trackedFilesMap.containsKey(fileName)) {
+            System.out.println("File does not exist in that commit.");
+            return;
+        }
+
+        String blobHash = trackedFilesMap.get(fileName);
+        writeContents(join(CWD, fileName), getObjectByHash(blobHash, String.class));
+    }
+
+    public static void checkoutBranch(String branchName) {
 
     }
 

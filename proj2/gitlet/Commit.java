@@ -54,6 +54,10 @@ public class Commit implements Serializable {
         return parent2;
     }
 
+    public String getMessage() {
+        return message;
+    }
+
     public String toString(DateTimeFormatter formatter) {
         String formattedTimestamp = timestamp.format(formatter);
         String date = "Date: " + formattedTimestamp;

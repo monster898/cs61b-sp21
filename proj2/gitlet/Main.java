@@ -20,7 +20,27 @@ public class Main {
             case "add":
                 Repository.add(args[1]);
                 break;
-                // TODO: FILL THE REST IN
+            case "commit":
+                Repository.commit(args[1]);
+                break;
+            case "rm":
+                Repository.rm(args[1]);
+                break;
+            case "log":
+                Repository.log();
+                break;
+            case "global-log":
+                Repository.globalLog();
+                break;
+            case "checkout":
+                if (args.length == 3) {
+                    Repository.checkoutFileOnHeadCommit(args[2]);
+                    break;
+                }
+                if (args.length == 4) {
+                    Repository.checkoutFileOnSpecificCommit(args[1], args[3]);
+                    break;
+                }
         }
     }
 

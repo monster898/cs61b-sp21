@@ -237,8 +237,24 @@ class Utils {
         System.out.println();
     }
 
+    /** Get File object by full or abbreviated hash */
     static File getFileByHash(String hash) {
-        return join(Repository.OBJECTS_DIR, hash.substring(0, 2), hash.substring(2));
+        String dir = hash.substring(0, 2);
+        // abbr logic
+        List<String> filenames = plainFilenamesIn(join(Repository.OBJECTS_DIR, dir));
+
+        if (filenames != null) {
+            for (String name: filenames) {
+                if (name.startsWith(hash.substring(2))) {
+                    return join(Repository.OBJECTS_DIR, dir, name);
+                }
+            }
+        }
+        return join(Repository.OBJECTS_DIR, dir, hash.substring(2));
+    }
+
+    static <T extends Serializable> T getObjectByHash(String hash, Class<T> expectedClass) {
+        return readObject(getFileByHash(hash), expectedClass);
     }
 
     /** Compute hash value of object as file name and write to file system.
@@ -246,7 +262,7 @@ class Utils {
      *  object's hash value is 0a214sd3g4asd23asd4
      *  object is stored in .gitlet/objects/0a/214sd3g4asd23asd4
      * */
-    static void writeObjectWithHashName(Serializable object, String hash) {
+    static void writeObjectWithHashAsFilename(Serializable object, String hash) {
         File file = getFileByHash(hash);
         file.getParentFile().mkdirs();
         writeObject(file, object);
