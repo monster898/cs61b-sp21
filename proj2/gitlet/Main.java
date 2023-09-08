@@ -1,6 +1,8 @@
 package gitlet;
 
 import java.util.Arrays;
+import java.util.Objects;
+import java.util.ResourceBundle;
 
 /** Driver class for Gitlet, a subset of the Git version-control system.
  *  @author Hao Chen
@@ -21,7 +23,7 @@ public class Main {
                 Repository.add(args[1]);
                 break;
             case "commit":
-                Repository.commit(args[1]);
+                Repository.commit(args[1], null);
                 break;
             case "rm":
                 Repository.rm(args[1]);
@@ -32,15 +34,33 @@ public class Main {
             case "global-log":
                 Repository.globalLog();
                 break;
+            case "find":
+                Repository.find(args[1]);
+                break;
+            case "status":
+                Repository.status();
+                break;
             case "checkout":
-                if (args.length == 3) {
+                if (args.length == 2) {
+                    Repository.checkoutBranch(args[1]);
+                } else if (args.length == 3) {
                     Repository.checkoutFileOnHeadCommit(args[2]);
-                    break;
-                }
-                if (args.length == 4) {
+                } else if (args.length == 4) {
                     Repository.checkoutFileOnSpecificCommit(args[1], args[3]);
-                    break;
                 }
+                break;
+            case "branch":
+                Repository.branch(args[1]);
+                break;
+            case "rm-branch":
+                Repository.rmBranch(args[1]);
+                break;
+            case "reset":
+                Repository.reset(args[1]);
+                 break;
+            case "merge":
+                Repository.merge(args[1]);
+                break;
         }
     }
 
@@ -68,20 +88,38 @@ public class Main {
             System.exit(0);
         }
 
-//        switch (command) {
-//            case "init":
-//                if (args.length != 1) {
-//
-//                }
-//                break;
-//            case "add":
-//
-//
-//        }
+        boolean valid = true;
+        switch (command) {
+            case "init":
+            case "log":
+            case "global-log":
+            case "status":
+                valid = args.length == 1;
+                break;
+            case "add":
+            case "commit":
+            case "rm":
+            case "find":
+            case "branch":
+            case "rm-branch":
+            case "reset":
+            case "merge":
+                valid = args.length == 2;
+                break;
+            case "checkout":
+                if (args.length > 4) {
+                    valid = false;
+                } else if (args.length == 3) {
+                    valid = Objects.equals(args[1], "--");
+                } else if (args.length == 4) {
+                    valid = Objects.equals(args[2], "--");
+                }
+                break;
+        }
 
-//        if (notValid) {
-//            System.out.println("Incorrect operands.");
-//            System.exit(0);
-//        }
+        if (!valid) {
+            System.out.println("Incorrect operands.");
+            System.exit(0);
+        }
     }
 }

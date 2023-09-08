@@ -265,7 +265,11 @@ class Utils {
     static void writeObjectWithHashAsFilename(Serializable object, String hash) {
         File file = getFileByHash(hash);
         file.getParentFile().mkdirs();
-        writeObject(file, object);
+        if (object instanceof String) {
+            writeContents(file, object);
+        } else {
+            writeObject(file, object);
+        }
     }
 
     static <T extends Serializable> T readObjectByHash(String hash, Class<T> expectedClass) {
@@ -274,6 +278,6 @@ class Utils {
 
     static void deleteFileByHash(String hash) {
         File file = getFileByHash(hash);
-        restrictedDelete(file);
+        file.delete();
     }
 }

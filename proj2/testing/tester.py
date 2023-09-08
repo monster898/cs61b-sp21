@@ -205,6 +205,8 @@ def fileExists(f, dir):
 def correctFileOutput(name, expected, dir):
     userData = canonicalize(contents(join(dir, name)))
     stdData = canonicalize(contents(join(src_dir, expected)))
+    print("userData-> ", userData)
+    print("stdData-> ", stdData)
     return userData == stdData
 
 def correctProgramOutput(expected, actual, last_groups, is_regexp):
