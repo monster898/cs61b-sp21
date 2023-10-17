@@ -104,6 +104,10 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
     }
 
     private Node findNodeByKey(K key, Collection<Node> bucket) {
+        if (bucket == null) {
+            return null;
+        }
+
         for (Node node: bucket) {
             if (node.key.equals(key)) {
                 return node;
@@ -113,11 +117,20 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
     }
 
     private void resize(int newSize) {
-        Collection<Node>[] newBuckets = createTable(newSize);
+        LinkedList<Node> allNodes = new LinkedList<>();
         for (K key: this) {
-            V
+            V value = get(key);
+            Node node = createNode(key, value);
+            allNodes.add(node);
         }
-        MAX_LOAD
+
+        clear();
+
+        Collection<Node>[] newBuckets = createTable(newSize);
+        buckets = newBuckets;
+        for (Node node: allNodes) {
+            put(node.key, node.value);
+        }
     }
 
     @Override
@@ -155,7 +168,6 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
 
     @Override
     public void put(K key, V value) {
-        // resize
         if (loadFactor() >= MAX_LOAD) {
             resize(size * 2);
         }
@@ -178,6 +190,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
     public Set<K> keySet() {
         HashSet<K> set = new HashSet<>();
         for (Collection<Node> bucket : buckets) {
+            if (bucket == null) continue;
             for (Node node : bucket) {
                 set.add(node.key);
             }
